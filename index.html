@@ -82,7 +82,17 @@ const fotoHeader = document.getElementById("fotoHeader");
 let meuNome = "";
 let minhaFoto = "https://cdn-icons-png.flaticon.com/512/124/124034.png";
 
-// Clicar no avatar abre a galeria
+// Emitir status de online quando nome definido
+nomeInput.addEventListener("change", ()=>{
+  const nome = nomeInput.value.trim();
+  if(nome && !meuNome){
+    meuNome = nome;
+    nomeInput.disabled = true;
+    socket.emit("usuario entrou", { nome:meuNome, foto:minhaFoto });
+  }
+});
+
+// Clique no avatar abre galeria
 fotoHeader.addEventListener("click", ()=> fotoInput.click());
 
 // Ler imagem selecionada
@@ -91,15 +101,20 @@ fotoInput.addEventListener("change", (e)=>{
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ()=>{
-    minhaFoto = reader.result;
+    minhaFoto = reader.result; 
     fotoHeader.src = minhaFoto;
+
+    // Emite atualização de foto
     if(meuNome) socket.emit("atualiza foto", { nome:meuNome, foto:minhaFoto });
+
+    // Foco no campo de mensagem
+    mensagemInput.focus();
   };
   reader.readAsDataURL(file);
 });
 
+// Envio de mensagem
 form.addEventListener("submit", (e)=>{ e.preventDefault(); enviarMensagem(); });
-
 mensagemInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); enviarMensagem(); }});
 
 function enviarMensagem(){
@@ -111,6 +126,7 @@ function enviarMensagem(){
     meuNome = nome;
     nomeInput.disabled = true;
     socket.emit("usuario entrou", { nome:meuNome, foto:minhaFoto });
+
     const bemVindo = document.createElement("li");
     bemVindo.textContent = `👋 Bem-vindo, ${meuNome}!`;
     bemVindo.classList.add("bem-vindo");
