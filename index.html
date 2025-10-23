@@ -1,323 +1,164 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat estilo WhatsApp</title>
-    <style>
-      /* ======== RESET E BASE ======== */
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat estilo WhatsApp - Avatar lateral</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { height:100%; font-family:"Segoe UI",Tahoma,Verdana,sans-serif; background:#e5ddd5; display:flex; justify-content:center; align-items:center; }
 
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #e5ddd5;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
+.chat-container { width:100%; max-width:420px; height:100dvh; background:#fff; display:flex; flex-direction:column; border-radius:10px; overflow:hidden; box-shadow:0 0 10px rgba(0,0,0,0.15); }
 
-      /* ======== CONTAINER DO CHAT ======== */
-      .chat-container {
-        width: 100%;
-        max-width: 420px;
-        height: 100vh;
-        background-color: #fff;
-        display: flex;
-        flex-direction: column;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-      }
+.chat-header { background:#075e54; color:white; padding:12px 16px; display:flex; align-items:center; gap:10px; }
+.avatar-container { display:flex; flex-direction:column; align-items:center; cursor:pointer; font-size:10px; color:#e0e0e0; text-align:center; }
+.chat-header img { width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid white; }
+.avatar-text { margin-top:2px; }
 
-      /* ======== CABEÇALHO ======== */
-      .chat-header {
-        background-color: #075e54;
-        color: white;
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
+.chat-header .info { display:flex; flex-direction:column; justify-content:center; }
+.chat-header .info h3 { font-size:16px; }
+.chat-header .info span { font-size:12px; color:#c9c9c9; }
 
-      .chat-header img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
+#mensagens { flex:1; list-style:none; background:#e5ddd5; padding:10px; overflow-y:auto; display:flex; flex-direction:column; scroll-behavior:smooth; }
+li { display:flex; align-items:flex-end; gap:6px; margin:8px 0; max-width:80%; }
+.mensagem-bolha { padding:8px 12px; border-radius:10px; word-wrap:break-word; font-size:15px; line-height:1.3; }
+.minha-mensagem { align-self:flex-end; flex-direction:row-reverse; }
+.minha-mensagem .mensagem-bolha { background:#dcf8c6; border-top-right-radius:0; }
+.mensagem-outro .mensagem-bolha { background:#fff; border-top-left-radius:0; }
+li img { width:32px; height:32px; border-radius:50%; object-fit:cover; }
+.bem-vindo { align-self:center; color:#666; font-style:italic; font-size:13px; margin:10px 0; }
+.hora { font-size:11px; color:#999; float:right; margin-left:8px; }
 
-      .chat-header .info {
-        display: flex;
-        flex-direction: column;
-      }
+form { background:#f0f0f0; display:flex; flex-direction:column; border-top:1px solid #ccc; padding:10px; padding-bottom:calc(10px + env(safe-area-inset-bottom)); }
+#nome { margin-bottom:8px; padding:10px; border:1px solid #ccc; border-radius:8px; outline:none; font-size:15px; }
+.input-area { display:flex; align-items:center; gap:8px; }
+#mensagem { flex:1; padding:12px 16px; border:1px solid #ccc; border-radius:22px; outline:none; font-size:15px; }
+button { background:#25d366; color:white; border:none; border-radius:50%; width:45px; height:45px; cursor:pointer; font-size:18px; display:flex; justify-content:center; align-items:center; }
+button:hover { background:#1ebe57; }
 
-      .chat-header .info h3 {
-        margin: 0;
-        font-size: 16px;
-      }
+#mensagens::-webkit-scrollbar { width:6px; }
+#mensagens::-webkit-scrollbar-thumb { background:#c1c1c1; border-radius:10px; }
 
-      .chat-header .info span {
-        font-size: 12px;
-        color: #c9c9c9;
-      }
+@media(max-width:450px){ body{align-items:stretch} .chat-container{border-radius:0; height:100dvh} }
+</style>
+</head>
+<body>
 
-      /* ======== ÁREA DE MENSAGENS ======== */
-      #mensagens {
-        flex: 1;
-        list-style-type: none;
-        background-color: #e5ddd5;
-        padding: 10px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        scroll-behavior: smooth;
-      }
-
-      li {
-        margin: 6px 0;
-        max-width: 80%;
-        padding: 8px 12px;
-        border-radius: 10px;
-        word-wrap: break-word;
-        position: relative;
-        font-size: 15px;
-        line-height: 1.3;
-      }
-
-      .minha-mensagem {
-        align-self: flex-end;
-        background-color: #dcf8c6;
-        border-top-right-radius: 0;
-      }
-
-      .mensagem-outro {
-        align-self: flex-start;
-        background-color: #fff;
-        border-top-left-radius: 0;
-      }
-
-      .bem-vindo {
-        align-self: center;
-        background-color: transparent;
-        color: #666;
-        font-style: italic;
-        font-size: 13px;
-        margin: 10px 0;
-      }
-
-      /* ======== HORÁRIO DA MENSAGEM ======== */
-      .hora {
-        font-size: 11px;
-        color: #999;
-        float: right;
-        margin-left: 8px;
-      }
-
-      /* ======== INDICADOR "DIGITANDO" ======== */
-      #digitando {
-        text-align: left;
-        font-size: 13px;
-        color: #666;
-        padding: 5px 15px;
-        background: #f8f8f8;
-        border-top: 1px solid #ddd;
-        display: none;
-      }
-
-      /* ======== RODAPÉ / FORMULÁRIO ======== */
-      form {
-        background-color: #f0f0f0;
-        display: flex;
-        flex-direction: column;
-        border-top: 1px solid #ccc;
-        padding: 8px;
-      }
-
-      #nome {
-        margin-bottom: 5px;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        outline: none;
-      }
-
-      .input-area {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      #mensagem {
-        flex: 1;
-        padding: 10px 15px;
-        border: 1px solid #ccc;
-        border-radius: 20px;
-        outline: none;
-        font-size: 15px;
-      }
-
-      button {
-        background-color: #25d366;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 42px;
-        height: 42px;
-        cursor: pointer;
-        font-size: 18px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      button:hover {
-        background-color: #1ebe57;
-      }
-
-      /* ======== SCROLLBAR ======== */
-      #mensagens::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      #mensagens::-webkit-scrollbar-thumb {
-        background-color: #c1c1c1;
-        border-radius: 10px;
-      }
-
-      /* ======== RESPONSIVIDADE ======== */
-      @media (max-width: 450px) {
-        body {
-          align-items: stretch;
-        }
-        .chat-container {
-          border-radius: 0;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="chat-container">
-      <div class="chat-header">
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/124/124034.png"
-          alt="Avatar"
-        />
-        <div class="info">
-          <h3>Chat em Grupo</h3>
-          <span id="status">online</span>
-        </div>
-      </div>
-
-      <ul id="mensagens"></ul>
-      <div id="digitando"></div>
-
-      <form id="form">
-        <input id="nome" placeholder="Seu nome de usuário" autocomplete="off" />
-        <div class="input-area">
-          <input
-            id="mensagem"
-            placeholder="Digite uma mensagem..."
-            autocomplete="off"
-          />
-          <button type="submit">➤</button>
-        </div>
-      </form>
+<div class="chat-container">
+  <div class="chat-header">
+    <div class="avatar-container">
+      <img id="fotoHeader" src="https://cdn-icons-png.flaticon.com/512/124/124034.png" alt="Avatar" title="Clique para escolher foto">
+      <span class="avatar-text">Altere sua foto</span>
     </div>
+    <div class="info">
+      <h3>Chat em Grupo</h3>
+      <span id="status">visto por último às --:--</span>
+    </div>
+  </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      const socket = io();
-      const nomeInput = document.getElementById("nome");
-      const mensagemInput = document.getElementById("mensagem");
-      const mensagens = document.getElementById("mensagens");
-      const form = document.getElementById("form");
-      const digitandoDiv = document.getElementById("digitando");
-      const statusSpan = document.getElementById("status");
+  <ul id="mensagens"></ul>
 
-      let meuNome = "";
-      let timeoutDigitando;
+  <form id="form">
+    <input id="nome" placeholder="Seu nome de usuário" autocomplete="off">
+    <input type="file" id="fotoInput" accept="image/*" style="display:none">
+    <div class="input-area">
+      <input id="mensagem" placeholder="Digite uma mensagem..." autocomplete="off">
+      <button type="submit">➤</button>
+    </div>
+  </form>
+</div>
 
-      // Enviar mensagem
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const nomeInput = document.getElementById("nome");
+const fotoInput = document.getElementById("fotoInput");
+const mensagemInput = document.getElementById("mensagem");
+const mensagens = document.getElementById("mensagens");
+const form = document.getElementById("form");
+const statusSpan = document.getElementById("status");
+const fotoHeader = document.getElementById("fotoHeader");
 
-        const nome = nomeInput.value.trim();
-        const mensagem = mensagemInput.value.trim();
-        if (!nome || !mensagem) return;
+let meuNome = "";
+let minhaFoto = "https://cdn-icons-png.flaticon.com/512/124/124034.png";
 
-        if (!meuNome) {
-          meuNome = nome;
-          nomeInput.disabled = true;
+// Clicar no avatar abre a galeria
+fotoHeader.addEventListener("click", ()=> fotoInput.click());
 
-          const bemVindo = document.createElement("li");
-          bemVindo.textContent = `👋 Bem-vindo, ${meuNome}!`;
-          bemVindo.classList.add("bem-vindo");
-          mensagens.appendChild(bemVindo);
-        }
+// Ler imagem selecionada
+fotoInput.addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    minhaFoto = reader.result;
+    fotoHeader.src = minhaFoto;
+    if(meuNome) socket.emit("atualiza foto", { nome:meuNome, foto:minhaFoto });
+  };
+  reader.readAsDataURL(file);
+});
 
-        socket.emit("chat message", { nome, mensagem });
-        mensagemInput.value = "";
-        socket.emit("parou digitar");
-      });
+form.addEventListener("submit", (e)=>{ e.preventDefault(); enviarMensagem(); });
 
-      // Mostrar mensagem recebida
-      socket.on("chat message", (dados) => {
-        const item = document.createElement("li");
+mensagemInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); enviarMensagem(); }});
 
-        // Horário da mensagem
-        const hora = new Date();
-        const horaStr = hora.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+function enviarMensagem(){
+  const nome = nomeInput.value.trim();
+  const mensagem = mensagemInput.value.trim();
+  if(!nome || !mensagem) return;
 
-        item.innerHTML = `<strong>${dados.nome}:</strong> ${dados.mensagem} <span class="hora">${horaStr}</span>`;
+  if(!meuNome){
+    meuNome = nome;
+    nomeInput.disabled = true;
+    socket.emit("usuario entrou", { nome:meuNome, foto:minhaFoto });
+    const bemVindo = document.createElement("li");
+    bemVindo.textContent = `👋 Bem-vindo, ${meuNome}!`;
+    bemVindo.classList.add("bem-vindo");
+    mensagens.appendChild(bemVindo);
+  }
 
-        if (dados.nome === meuNome) {
-          item.classList.add("minha-mensagem");
-        } else {
-          item.classList.add("mensagem-outro");
-        }
+  socket.emit("chat message", { nome, mensagem, foto:minhaFoto });
+  mensagemInput.value="";
+}
 
-        mensagens.appendChild(item);
-        mensagens.scrollTop = mensagens.scrollHeight;
-      });
+// Receber mensagens
+socket.on("chat message",(dados)=>{
+  const item = document.createElement("li");
+  const bolha = document.createElement("div");
+  const img = document.createElement("img");
 
-      // Enviar evento "digitando"
-      mensagemInput.addEventListener("input", () => {
-        if (meuNome) socket.emit("digitando", meuNome);
-        clearTimeout(timeoutDigitando);
-        timeoutDigitando = setTimeout(() => {
-          socket.emit("parou digitar");
-        }, 2000);
-      });
+  img.src = dados.foto || "https://cdn-icons-png.flaticon.com/512/124/124034.png";
+  bolha.classList.add("mensagem-bolha");
 
-      // Mostrar indicador de digitação
-      socket.on("digitando", (nome) => {
-        if (nome !== meuNome) {
-          digitandoDiv.textContent = `${nome} está digitando...`;
-          digitandoDiv.style.display = "block";
-        }
-      });
+  const hora = new Date();
+  const horaStr = hora.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+  bolha.innerHTML = `<strong>${dados.nome}:</strong> ${dados.mensagem} <span class="hora">${horaStr}</span>`;
 
-      // Ocultar indicador
-      socket.on("parou digitar", () => {
-        digitandoDiv.style.display = "none";
-      });
+  if(dados.nome===meuNome) item.classList.add("minha-mensagem");
+  else item.classList.add("mensagem-outro");
 
-      // Mostrar quando alguém entra
-      socket.on("usuario entrou", (nome) => {
-        if (nome !== meuNome) {
-          statusSpan.textContent = `${nome} online`;
-          setTimeout(() => (statusSpan.textContent = "online"), 3000);
-        }
-      });
-    </script>
-  </body>
+  item.appendChild(img);
+  item.appendChild(bolha);
+  mensagens.appendChild(item);
+  mensagens.scrollTop = mensagens.scrollHeight;
+});
+
+// Atualizar foto em tempo real
+socket.on("atualiza foto",(dados)=>{
+  document.querySelectorAll("li").forEach(li=>{
+    const strong = li.querySelector("strong");
+    if(strong && strong.textContent.replace(":", "")===dados.nome){
+      li.querySelector("img").src = dados.foto;
+    }
+  });
+});
+
+// Status online
+socket.on("usuario entrou",(dados)=>{
+  statusSpan.textContent = `${dados.nome} online`;
+  setTimeout(()=>statusSpan.textContent="online",2000);
+});
+</script>
+
+</body>
 </html>
