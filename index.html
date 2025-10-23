@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Chat WhatsApp Responsivo</title>
+<title>Chat WhatsApp com Modal Inicial</title>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 html, body { height:100%; font-family:"Segoe UI",Tahoma,Verdana,sans-serif; background:#e5ddd5; display:flex; justify-content:center; align-items:center; }
@@ -40,12 +40,11 @@ li { display:flex; align-items:flex-end; gap:6px; margin:8px 0; max-width:100%; 
 .minha-mensagem .mensagem-bolha { background:#dcf8c6; border-top-right-radius:0; }
 .mensagem-outro { flex-direction:row; }
 .mensagem-outro .mensagem-bolha { background:#fff; border-top-left-radius:0; }
-li img.avatar { width:50px; height:50px; border-radius:50%; object-fit:cover; }
+li img.avatar { width:50px; height:50px; border-radius:25px; object-fit:cover; }
 .bem-vindo { align-self:center; color:#666; font-style:italic; font-size:13px; margin:10px 0; opacity:0; transform: translateY(10px); animation: entrada 0.3s forwards; }
 .hora { font-size:11px; color:#999; margin-left:6px; float:right; }
 
 form { background:#f0f0f0; display:flex; flex-direction:column; border-top:1px solid #ccc; padding:10px; padding-bottom:calc(10px + env(safe-area-inset-bottom)); }
-#nome { margin-bottom:8px; padding:10px; border:1px solid #ccc; border-radius:8px; outline:none; font-size:15px; }
 .input-area { display:flex; align-items:center; gap:5px; position: relative; }
 #mensagem { flex:1; padding:12px 16px; border:1px solid #ccc; border-radius:22px; outline:none; font-size:15px; resize:none; overflow-y:auto; max-height:120px; transition: height 0.2s; }
 #emojiBtn,#fotoMsgBtn { background:#fff; border:1px solid #ccc; border-radius:50%; width:40px; height:40px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; }
@@ -54,6 +53,15 @@ button[type="submit"]:hover { background:#1ebe57; }
 
 #emojiPicker { position:absolute; bottom:50px; left:0; background:white; border:1px solid #ccc; border-radius:10px; padding:5px; display:none; flex-wrap:wrap; max-width:250px; z-index:20; }
 #emojiPicker span { font-size:22px; margin:3px; cursor:pointer; }
+
+#modalPerfil {
+  position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:50;
+}
+#modalPerfil .modal-conteudo {
+  background:#fff; padding:20px; border-radius:10px; width:90%; max-width:350px; text-align:center;
+}
+#modalPerfil input { width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc; }
+#modalPerfil button { padding:10px 20px; background:#25d366; color:white; border:none; border-radius:8px; cursor:pointer; }
 
 #mensagens::-webkit-scrollbar { width:6px; }
 #mensagens::-webkit-scrollbar-thumb { background:#c1c1c1; border-radius:10px; }
@@ -66,11 +74,24 @@ button[type="submit"]:hover { background:#1ebe57; }
 </head>
 <body>
 
-<div class="chat-container">
+<!-- Modal Inicial -->
+<div id="modalPerfil">
+  <div class="modal-conteudo">
+    <h3>Bem-vindo!</h3>
+    <input type="text" id="nomeModal" placeholder="Digite seu nome">
+    <input type="file" id="fotoModalInicial" accept="image/*">
+    <br>
+    <button id="entrarBtn">Entrar no Chat</button>
+  </div>
+</div>
+
+<!-- Chat -->
+<div class="chat-container" style="display:none;">
   <div class="chat-header">
     <div class="avatar-container">
-      <img id="fotoHeader" src="https://cdn-icons-png.flaticon.com/512/124/124034.png" alt="Avatar" title="Clique para escolher foto">
+      <img id="fotoHeader" src="https://cdn-icons-png.flaticon.com/512/124/124034.png" alt="Avatar" title="Clique para alterar foto">
       <span class="avatar-text">Altere sua foto</span>
+      <input type="file" id="fotoHeaderInput" accept="image/*" style="display:none">
     </div>
     <div class="info">
       <h3>Chat em Grupo</h3>
@@ -81,15 +102,13 @@ button[type="submit"]:hover { background:#1ebe57; }
   <ul id="mensagens"></ul>
 
   <form id="form">
-    <input id="nome" placeholder="Seu nome de usuário" autocomplete="off">
-    <input type="file" id="fotoInput" accept="image/*" style="display:none">
-    <input type="file" id="fotoMsgInput" accept="image/*" style="display:none">
     <div class="input-area">
       <button type="button" id="emojiBtn">😊</button>
       <button type="button" id="fotoMsgBtn">📷</button>
       <textarea id="mensagem" placeholder="Digite uma mensagem..." autocomplete="off" rows="1"></textarea>
       <button type="submit">➤</button>
       <div id="emojiPicker"></div>
+      <input type="file" id="fotoMsgInput" accept="image/*" style="display:none">
     </div>
   </form>
 </div>
@@ -97,20 +116,59 @@ button[type="submit"]:hover { background:#1ebe57; }
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const socket = io();
-const nomeInput = document.getElementById("nome");
-const fotoInput = document.getElementById("fotoInput");
-const fotoMsgInput = document.getElementById("fotoMsgInput");
+
+// Modal Inicial
+const modal = document.getElementById("modalPerfil");
+const entrarBtn = document.getElementById("entrarBtn");
+const nomeModal = document.getElementById("nomeModal");
+const fotoModalInicial = document.getElementById("fotoModalInicial");
+
+// Chat Elements
+const chatContainer = document.querySelector(".chat-container");
+const fotoHeader = document.getElementById("fotoHeader");
+const fotoHeaderInput = document.getElementById("fotoHeaderInput");
 const mensagemInput = document.getElementById("mensagem");
 const mensagens = document.getElementById("mensagens");
 const form = document.getElementById("form");
 const statusSpan = document.getElementById("status");
-const fotoHeader = document.getElementById("fotoHeader");
 const emojiBtn = document.getElementById("emojiBtn");
 const fotoMsgBtn = document.getElementById("fotoMsgBtn");
 const emojiPicker = document.getElementById("emojiPicker");
+const fotoMsgInput = document.getElementById("fotoMsgInput");
 
 let meuNome = "";
 let minhaFoto = "https://cdn-icons-png.flaticon.com/512/124/124034.png";
+
+// Modal Inicial
+entrarBtn.addEventListener("click", ()=>{
+  const nome = nomeModal.value.trim();
+  const file = fotoModalInicial.files[0];
+  if(!nome){ alert("Informe seu nome"); return; }
+  if(!file){ alert("Escolha uma foto de perfil"); return; }
+
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    minhaFoto = reader.result;
+    fotoHeader.src = minhaFoto;
+    meuNome = nome;
+
+    modal.style.display="none";
+    chatContainer.style.display="flex";
+
+    socket.emit("usuario entrou",{ nome:meuNome, foto:minhaFoto });
+    mensagemInput.focus();
+    atualizaVisto();
+  };
+  reader.readAsDataURL(file);
+});
+
+// Atualiza visto
+function atualizaVisto() {
+  const agora = new Date();
+  const horas = agora.getHours().toString().padStart(2,'0');
+  const minutos = agora.getMinutes().toString().padStart(2,'0');
+  statusSpan.textContent = `visto por último às ${horas}:${minutos}`;
+}
 
 // Emojis
 const emojis = ["😀","😂","😎","😍","😭","😡","👍","🙏","🎉","❤️"];
@@ -125,61 +183,39 @@ emojis.forEach(e=>{
   });
   emojiPicker.appendChild(span);
 });
-
 emojiBtn.addEventListener("click", ()=>{ emojiPicker.style.display = emojiPicker.style.display==="flex"?"none":"flex"; });
 
-// Atualiza visto
-function atualizaVisto() {
-  const agora = new Date();
-  const horas = agora.getHours().toString().padStart(2,'0');
-  const minutos = agora.getMinutes().toString().padStart(2,'0');
-  statusSpan.textContent = `visto por último às ${horas}:${minutos}`;
+// Envio de mensagens
+function enviarMensagem(){
+  const mensagem = mensagemInput.value.trim();
+  if(!mensagem) return;
+  socket.emit("chat message",{ nome:meuNome, mensagem, foto:minhaFoto });
+  mensagemInput.value=""; mensagemInput.style.height='auto';
+  atualizaVisto();
 }
 
-// Ajuste altura textarea
+// Ajusta altura textarea
 mensagemInput.addEventListener('input', ()=>{
-  mensagemInput.style.height = 'auto';
+  mensagemInput.style.height='auto';
   mensagemInput.style.height = mensagemInput.scrollHeight + 'px';
   mensagens.scrollTop = mensagens.scrollHeight;
 });
 
-// Nome e avatar
-nomeInput.addEventListener("change", ()=>{
-  const nome = nomeInput.value.trim();
-  if(nome && !meuNome){
-    meuNome = nome;
-    nomeInput.disabled = true;
-    socket.emit("usuario entrou", { nome:meuNome, foto:minhaFoto });
-    atualizaVisto();
-  }
-});
-
-// Corrige problema de envio após alterar foto
-fotoHeader.addEventListener("click", ()=> fotoInput.click());
-fotoInput.addEventListener("change", e=>{
+// Alterar foto de perfil depois
+fotoHeader.addEventListener("click", ()=> fotoHeaderInput.click());
+fotoHeaderInput.addEventListener("change", e=>{
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ()=>{
     minhaFoto = reader.result;
     fotoHeader.src = minhaFoto;
-    // Força atualização do foco no input de mensagem para continuar enviando
     mensagemInput.focus();
   };
   reader.readAsDataURL(file);
 });
 
-// Enviar mensagem
-function enviarMensagem(){
-  const nome = nomeInput.value.trim();
-  const mensagem = mensagemInput.value.trim();
-  if(!nome || !mensagem) return;
-  socket.emit("chat message", { nome, mensagem, foto:minhaFoto });
-  mensagemInput.value=""; mensagemInput.style.height='auto';
-  atualizaVisto();
-}
-
-// Enviar foto da mensagem
+// Envio de foto da mensagem
 fotoMsgBtn.addEventListener("click", ()=> fotoMsgInput.click());
 fotoMsgInput.addEventListener("change", e=>{
   const file = e.target.files[0];
@@ -189,7 +225,7 @@ fotoMsgInput.addEventListener("change", e=>{
   reader.readAsDataURL(file);
 });
 
-// Enter e Shift+Enter
+// Enter envia
 mensagemInput.addEventListener("keydown", e=>{
   if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); enviarMensagem(); }
 });
@@ -200,11 +236,10 @@ socket.on("chat message", dados=>{
   const item = document.createElement("li");
   const bolha = document.createElement("div");
   const img = document.createElement("img");
-  img.src = dados.foto || "https://cdn-icons-png.flaticon.com/512/124/124034.png";
+  img.src = dados.foto;
   img.classList.add("avatar");
   item.appendChild(img);
 
-  // Mensagem texto
   if(dados.mensagem){
     bolha.classList.add("mensagem-bolha");
     const hora = new Date();
@@ -212,7 +247,6 @@ socket.on("chat message", dados=>{
     bolha.innerHTML += `<strong>${dados.nome}:</strong> ${dados.mensagem} <span class="hora">${horaStr}</span>`;
   }
 
-  // Mensagem imagem
   if(dados.imagem){
     const imgMsg = document.createElement("img");
     imgMsg.src = dados.imagem;
