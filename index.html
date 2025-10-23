@@ -2,46 +2,65 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat estilo WhatsApp</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chat estilo WhatsApp Premium</title>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 html, body { height:100%; font-family:"Segoe UI",Tahoma,Verdana,sans-serif; background:#e5ddd5; display:flex; justify-content:center; align-items:center; }
 
-.chat-container { width:100%; max-width:420px; height:100dvh; background:#fff; display:flex; flex-direction:column; border-radius:10px; overflow:hidden; box-shadow:0 0 10px rgba(0,0,0,0.15); }
+.chat-container { width:100%; max-width:420px; height:100vh; background:#fff; display:flex; flex-direction:column; border-radius:10px; overflow:hidden; box-shadow:0 0 15px rgba(0,0,0,0.2); }
 
-.chat-header { background:#075e54; color:white; padding:12px 16px; display:flex; align-items:center; gap:10px; }
+.chat-header {
+  background:#075e54;
+  color:white;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  position: sticky;
+  top:0;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: all 0.2s ease-in-out;
+}
+
 .avatar-container { display:flex; flex-direction:column; align-items:center; cursor:pointer; font-size:10px; color:#e0e0e0; text-align:center; }
-.chat-header img { width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid white; }
+.chat-header img { width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid white; transition: transform 0.2s; }
+.chat-header img:hover { transform: scale(1.05); }
 .avatar-text { margin-top:2px; }
 
 .chat-header .info { display:flex; flex-direction:column; justify-content:center; }
 .chat-header .info h3 { font-size:16px; }
 .chat-header .info span { font-size:12px; color:#c9c9c9; }
 
-#mensagens { flex:1; list-style:none; background:#e5ddd5; padding:10px; overflow-y:auto; display:flex; flex-direction:column; scroll-behavior:smooth; }
-li { display:flex; align-items:flex-end; gap:6px; margin:8px 0; max-width:100%; }
-.mensagem-bolha { padding:8px 12px; border-radius:10px; word-wrap:break-word; font-size:15px; line-height:1.3; max-width:80%; }
+#mensagens { flex:1 1 auto; list-style:none; background:#e5ddd5; padding:10px; overflow-y:auto; display:flex; flex-direction:column; scroll-behavior:smooth; }
+li { display:flex; align-items:flex-end; gap:6px; margin:8px 0; max-width:100%; opacity:0; transform: translateY(20px); animation: entrada 0.3s forwards; }
+@keyframes entrada { to { opacity:1; transform:translateY(0);} }
+
+.mensagem-bolha { padding:8px 12px; border-radius:10px; word-wrap:break-word; font-size:15px; line-height:1.3; max-width:75%; white-space: pre-wrap; transition: background 0.2s; }
 .minha-mensagem { align-self:flex-end; flex-direction:row-reverse; }
 .minha-mensagem .mensagem-bolha { background:#dcf8c6; border-top-right-radius:0; }
 .mensagem-outro { flex-direction:row; }
 .mensagem-outro .mensagem-bolha { background:#fff; border-top-left-radius:0; }
 .mensagem-outro img { width:32px; height:32px; border-radius:50%; object-fit:cover; }
 li img { width:32px; height:32px; border-radius:50%; object-fit:cover; }
-.bem-vindo { align-self:center; color:#666; font-style:italic; font-size:13px; margin:10px 0; }
+.bem-vindo { align-self:center; color:#666; font-style:italic; font-size:13px; margin:10px 0; opacity:0; transform: translateY(10px); animation: entrada 0.3s forwards; }
 .hora { font-size:11px; color:#999; margin-left:6px; float:right; }
 
 form { background:#f0f0f0; display:flex; flex-direction:column; border-top:1px solid #ccc; padding:10px; padding-bottom:calc(10px + env(safe-area-inset-bottom)); }
 #nome { margin-bottom:8px; padding:10px; border:1px solid #ccc; border-radius:8px; outline:none; font-size:15px; }
 .input-area { display:flex; align-items:center; gap:8px; }
-#mensagem { flex:1; padding:12px 16px; border:1px solid #ccc; border-radius:22px; outline:none; font-size:15px; }
+#mensagem { flex:1; padding:12px 16px; border:1px solid #ccc; border-radius:22px; outline:none; font-size:15px; resize:none; overflow-y:auto; max-height:120px; transition: height 0.2s; }
 button { background:#25d366; color:white; border:none; border-radius:50%; width:45px; height:45px; cursor:pointer; font-size:18px; display:flex; justify-content:center; align-items:center; }
 button:hover { background:#1ebe57; }
 
 #mensagens::-webkit-scrollbar { width:6px; }
 #mensagens::-webkit-scrollbar-thumb { background:#c1c1c1; border-radius:10px; }
 
-@media(max-width:450px){ body{align-items:stretch} .chat-container{border-radius:0; height:100dvh} }
+@media(max-width:450px){ 
+  body{align-items:stretch} 
+  .chat-container{border-radius:0; height:100vh} 
+}
 </style>
 </head>
 <body>
@@ -64,7 +83,7 @@ button:hover { background:#1ebe57; }
     <input id="nome" placeholder="Seu nome de usuário" autocomplete="off">
     <input type="file" id="fotoInput" accept="image/*" style="display:none">
     <div class="input-area">
-      <input id="mensagem" placeholder="Digite uma mensagem..." autocomplete="off">
+      <textarea id="mensagem" placeholder="Digite uma mensagem..." autocomplete="off" rows="1"></textarea>
       <button type="submit">➤</button>
     </div>
   </form>
@@ -84,7 +103,7 @@ const fotoHeader = document.getElementById("fotoHeader");
 let meuNome = "";
 let minhaFoto = "https://cdn-icons-png.flaticon.com/512/124/124034.png";
 
-// --- FUNÇÃO PARA ATUALIZAR VISTO LOCAL ---
+// Atualiza visto local
 function atualizaVisto() {
   const agora = new Date();
   const horas = agora.getHours().toString().padStart(2,'0');
@@ -92,7 +111,14 @@ function atualizaVisto() {
   statusSpan.textContent = `visto por último às ${horas}:${minutos}`;
 }
 
-// --- DEFINIR NOME ---
+// Ajusta altura do textarea automaticamente
+mensagemInput.addEventListener('input', ()=>{
+  mensagemInput.style.height = 'auto';
+  mensagemInput.style.height = mensagemInput.scrollHeight + 'px';
+  mensagens.scrollTop = mensagens.scrollHeight;
+});
+
+// Definir nome
 nomeInput.addEventListener("change", ()=>{
   const nome = nomeInput.value.trim();
   if(nome && !meuNome){
@@ -103,10 +129,10 @@ nomeInput.addEventListener("change", ()=>{
   }
 });
 
-// --- ABRIR GALERIA AO CLICAR NO AVATAR ---
+// Abrir galeria
 fotoHeader.addEventListener("click", ()=> fotoInput.click());
 
-// --- LER IMAGEM SELECIONADA ---
+// Ler imagem selecionada
 fotoInput.addEventListener("change", (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -114,17 +140,16 @@ fotoInput.addEventListener("change", (e)=>{
   reader.onload = ()=>{
     minhaFoto = reader.result;
     fotoHeader.src = minhaFoto;
-
     setTimeout(()=>{
-      mensagemInput.focus(); // mantém teclado aberto
-    }, 150);
-
+      mensagemInput.focus();
+      mensagens.scrollTop = mensagens.scrollHeight;
+    }, 200);
     atualizaVisto();
   };
   reader.readAsDataURL(file);
 });
 
-// --- ENVIO DE MENSAGENS ---
+// Envio de mensagens
 function enviarMensagem(){
   const nome = nomeInput.value.trim();
   const mensagem = mensagemInput.value.trim();
@@ -142,14 +167,23 @@ function enviarMensagem(){
 
   socket.emit("chat message", { nome, mensagem, foto:minhaFoto });
   mensagemInput.value="";
+  mensagemInput.style.height = 'auto';
   atualizaVisto();
 }
 
+// Enter cria nova linha, Shift+Enter envia
+mensagemInput.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    enviarMensagem();
+  }
+});
+
+// Form submit
 form.addEventListener("submit", (e)=>{ e.preventDefault(); enviarMensagem(); });
-mensagemInput.addEventListener("keydown", e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); enviarMensagem(); }});
 mensagemInput.addEventListener("input", atualizaVisto);
 
-// --- RECEBER MENSAGENS ---
+// Receber mensagens
 socket.on("chat message",(dados)=>{
   const item = document.createElement("li");
   const bolha = document.createElement("div");
@@ -171,7 +205,7 @@ socket.on("chat message",(dados)=>{
   mensagens.scrollTop = mensagens.scrollHeight;
 });
 
-// --- ATUALIZA FOTO EM TEMPO REAL ---
+// Atualiza foto em tempo real
 socket.on("atualiza foto",(dados)=>{
   document.querySelectorAll("li").forEach(li=>{
     const strong = li.querySelector("strong");
@@ -179,6 +213,11 @@ socket.on("atualiza foto",(dados)=>{
       li.querySelector("img").src = dados.foto;
     }
   });
+});
+
+// Scroll quando input recebe foco (mobile)
+mensagemInput.addEventListener("focus", ()=>{
+  setTimeout(()=>{ mensagens.scrollTop = mensagens.scrollHeight; }, 300);
 });
 </script>
 
