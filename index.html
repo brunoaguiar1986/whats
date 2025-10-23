@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bate-papo estilo WhatsApp</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #ece5dd;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #mensagens {
+        flex: 1;
+        list-style-type: none;
+        padding: 10px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      li {
+        margin: 8px 0;
+        max-width: 70%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        word-wrap: break-word;
+        position: relative;
+        font-size: 15px;
+      }
+
+      /* Mensagens enviadas pelo próprio usuário */
+      .minha-mensagem {
+        align-self: flex-end;
+        background-color: #dcf8c6;
+        border-top-right-radius: 0;
+      }
+
+      /* Mensagens recebidas de outros usuários */
+      .mensagem-outro {
+        align-self: flex-start;
+        background-color: #fff;
+        border-top-left-radius: 0;
+      }
+
+      /* Mensagem de boas-vindas */
+      .bem-vindo {
+        align-self: center;
+        background-color: transparent;
+        color: #666;
+        font-style: italic;
+        font-size: 14px;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-top: 1px solid #ccc;
+      }
+
+      #nome {
+        margin-bottom: 5px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        outline: none;
+      }
+
+      #mensagem {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        outline: none;
+      }
+
+      button {
+        background-color: #25d366;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        cursor: pointer;
+        margin-left: 8px;
+      }
+
+      button:hover {
+        background-color: #1ebe57;
+      }
+
+      .input-area {
+        display: flex;
+        align-items: center;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <ul id="mensagens"></ul>
+
+    <form id="form">
+      <input id="nome" placeholder="Seu nome de usuário" autocomplete="off" /><br />
+      <div class="input-area">
+        <input id="mensagem" placeholder="Digite uma mensagem..." autocomplete="off" />
+        <button type="submit">➤</button>
+      </div>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const nomeInput = document.getElementById("nome");
+      const mensagemInput = document.getElementById("mensagem");
+      const mensagens = document.getElementById("mensagens");
+      const form = document.getElementById("form");
+
+      let meuNome = "";
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const nome = nomeInput.value.trim();
+        const mensagem = mensagemInput.value.trim();
+        if (!nome || !mensagem) return;
+
+        if (!meuNome) {
+          meuNome = nome;
+          nomeInput.disabled = true;
+
+          // Mensagem de boas-vindas
+          const bemVindo = document.createElement("li");
+          bemVindo.textContent = `Bem-vindo, ${meuNome}!`;
+          bemVindo.classList.add("bem-vindo");
+          mensagens.appendChild(bemVindo);
+        }
+
+        socket.emit("chat message", { nome, mensagem });
+        mensagemInput.value = "";
+      });
+
+      socket.on("chat message", (dados) => {
+        const item = document.createElement("li");
+        item.textContent = `${dados.nome}: ${dados.mensagem}`;
+
+        // Aplica estilo de acordo com quem enviou
+        if (dados.nome === meuNome) {
+          item.classList.add("minha-mensagem");
+        } else {
+          item.classList.add("mensagem-outro");
+        }
+
+        mensagens.appendChild(item);
+        mensagens.scrollTop = mensagens.scrollHeight; // rolar para baixo
+      });
+    </script>
+  </body>
+</html>
