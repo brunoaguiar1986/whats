@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat estilo WhatsApp - Avatar lateral</title>
+<title>Chat estilo WhatsApp</title>
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 html, body { height:100%; font-family:"Segoe UI",Tahoma,Verdana,sans-serif; background:#e5ddd5; display:flex; justify-content:center; align-items:center; }
@@ -82,7 +82,7 @@ const fotoHeader = document.getElementById("fotoHeader");
 let meuNome = "";
 let minhaFoto = "https://cdn-icons-png.flaticon.com/512/124/124034.png";
 
-// Emitir status de online quando nome definido
+// Quando digita o nome
 nomeInput.addEventListener("change", ()=>{
   const nome = nomeInput.value.trim();
   if(nome && !meuNome){
@@ -92,7 +92,7 @@ nomeInput.addEventListener("change", ()=>{
   }
 });
 
-// Clique no avatar abre galeria
+// Clicar no avatar abre galeria
 fotoHeader.addEventListener("click", ()=> fotoInput.click());
 
 // Ler imagem selecionada
@@ -101,14 +101,13 @@ fotoInput.addEventListener("change", (e)=>{
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ()=>{
-    minhaFoto = reader.result; 
+    minhaFoto = reader.result;
     fotoHeader.src = minhaFoto;
 
-    // Emite atualização de foto
     if(meuNome) socket.emit("atualiza foto", { nome:meuNome, foto:minhaFoto });
 
-    // Foco no campo de mensagem
-    mensagemInput.focus();
+    // Força foco no campo de mensagem para mobile
+    setTimeout(()=>{ mensagemInput.focus(); }, 100);
   };
   reader.readAsDataURL(file);
 });
@@ -169,10 +168,12 @@ socket.on("atualiza foto",(dados)=>{
   });
 });
 
-// Status online
-socket.on("usuario entrou",(dados)=>{
-  statusSpan.textContent = `${dados.nome} online`;
-  setTimeout(()=>statusSpan.textContent="online",2000);
+// Atualiza "visto por último"
+socket.on("atualiza status",(dados)=>{
+  if(dados.nome===meuNome){
+    let data = new Date(dados.ultimaAtividade);
+    statusSpan.textContent = `visto por último às ${data.getHours()}:${data.getMinutes().toString().padStart(2,'0')}`;
+  }
 });
 </script>
 
